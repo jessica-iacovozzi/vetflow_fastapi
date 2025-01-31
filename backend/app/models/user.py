@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Boolean
+from sqlalchemy.orm import relationship
 from .base import TimeStampedBase
 
 class User(TimeStampedBase):
@@ -9,3 +10,6 @@ class User(TimeStampedBase):
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
     preferred_language = Column(String, default="en")
+
+    #Relationships
+    pets = relationship("Pet", back_populates="owner")
