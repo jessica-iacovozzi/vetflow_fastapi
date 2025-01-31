@@ -27,3 +27,4 @@ class Pet(TimeStampedBase):
     
     # Relationships
     owner = relationship("User", back_populates="pets")
+    questionnaire_responses = relationship("QuestionnaireResponse", back_populates="pet")
