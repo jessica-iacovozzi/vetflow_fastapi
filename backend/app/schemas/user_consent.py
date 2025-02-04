@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class PolicyBase(BaseModel):
@@ -14,8 +14,7 @@ class Policy(PolicyBase):
     id: int
     effective_date: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserConsentBase(BaseModel):
     user_id: int
@@ -29,5 +28,4 @@ class UserConsent(UserConsentBase):
     consent_date: datetime
     policy: Policy
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

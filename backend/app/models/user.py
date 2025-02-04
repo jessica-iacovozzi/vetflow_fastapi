@@ -13,3 +13,4 @@ class User(TimeStampedBase):
 
     #Relationships
     pets = relationship("Pet", back_populates="owner")
+    consents = relationship("UserConsent", back_populates="user")

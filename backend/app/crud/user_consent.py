@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from fastapi import HTTPException
-from models.user_consent import UserConsent, Policy
-from schemas.user_consent import PolicyCreate
+from app.models.user_consent import UserConsent, Policy
+from app.schemas.user_consent import PolicyCreate
 
 def get_active_policy(db: Session) -> Optional[Policy]:
     return db.query(Policy).filter(Policy.is_active == True).first()

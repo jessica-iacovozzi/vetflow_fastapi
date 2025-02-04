@@ -1,18 +1,15 @@
 from pathlib import Path
-from typing import List
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_babel import Babel, BabelConfigs, BabelMiddleware, _
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.api.v1.api import api_router
 
 settings = get_settings()
 logger = setup_logging()
 
-# Get the project root directory
 BASE_DIR = Path(__file__).resolve().parent
-
-# Supported languages configuration
 SUPPORTED_LANGUAGES = ["en", "fr"]
 
 def get_locale(request: Request) -> str:
@@ -32,9 +29,6 @@ configs = BabelConfigs(
     ROOT_DIR=str(BASE_DIR),
     BABEL_DEFAULT_LOCALE="en",
     BABEL_TRANSLATION_DIRECTORY="translations",
-    BABEL_SUPPORTED_LOCALES=SUPPORTED_LANGUAGES,
-    # Function to determine which language to use for each request
-    BABEL_LOCALE_SELECTOR=get_locale
 )
 
 app = FastAPI(

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import date, datetime
 from typing import Optional
 from enum import Enum
@@ -21,7 +21,7 @@ class PetBase(BaseModel):
         min_length=1, 
         max_length=50,
         description="Pet's name",
-        examples=["Fluffy", "Max"]
+        json_schema_extra={"examples": ["Fluffy", "Max"]}
     )
     species: Species = Field(
         ..., 
@@ -31,7 +31,7 @@ class PetBase(BaseModel):
         default=None, 
         max_length=100,
         description="Breed of the pet",
-        examples=["Golden Retriever", "Siamese"]
+        json_schema_extra={"examples": ["Golden Retriever", "Siamese"]}
     )
     date_of_birth: Optional[date] = Field(
         default=None,
@@ -79,5 +79,4 @@ class Pet(PetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True) 

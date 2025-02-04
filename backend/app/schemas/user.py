@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from datetime import datetime
 from app.schemas.pet import Pet
 from typing import List, Optional
@@ -14,7 +14,7 @@ class UserBase(BaseModel):
         min_length=2, 
         max_length=100,
         description="Full name of the user",
-        examples=["John Doe"]
+        json_schema_extra={"examples": ["John Doe"]},
     )
     preferred_language: str = Field(
         default="en", 
@@ -36,7 +36,7 @@ class UserCreate(UserBase):
         min_length=8, 
         max_length=64,
         description="User password",
-        example="StrongPassword123!"
+        json_schema_extra={"examples": ["StrongPassword123!"]},
     )
 
     @field_validator('password')
@@ -75,5 +75,4 @@ class User(UserBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True  # This enables ORM mode
+model_config = ConfigDict(from_attributes=True)

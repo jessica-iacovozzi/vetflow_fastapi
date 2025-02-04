@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, Optional
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Dict, Any
 from datetime import datetime
 from enum import Enum
 
@@ -17,7 +17,7 @@ class QuestionnaireBase(BaseModel):
     responses: Dict[str, Any] = Field(
         ..., 
         description="Responses to questionnaire",
-        min_items=1
+        min_length=1
     )
 
     @field_validator('responses')
@@ -60,8 +60,7 @@ class Questionnaire(QuestionnaireBase):
     pet_id: int
     visit_date: datetime
 
-    class Config:
-        from_attributes = True
+model_config = ConfigDict(from_attributes=True)
 
 # Predefined Questionnaire Templates
 QUESTIONNAIRE_TEMPLATES = {
