@@ -5,19 +5,12 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.crud.user import get_user_by_email
-from app.db.session import SessionLocal
+from app.db.session import get_db
 from app.schemas.auth import TokenData
 from app.schemas.user import User
 
 settings = get_settings()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
-
-def get_db() -> Generator:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 async def get_current_user(
     db: Session = Depends(get_db),

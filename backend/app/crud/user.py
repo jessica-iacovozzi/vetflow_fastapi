@@ -13,7 +13,7 @@ def create_user(db: Session, user: UserRegister) -> User:
         email=user.email,
         hashed_password=hashed_password,
         full_name=user.full_name,
-        preferred_language=user.preferred_language
+        preferred_language=user.preferred_language,
     )
     db.add(db_user)
     db.commit()
