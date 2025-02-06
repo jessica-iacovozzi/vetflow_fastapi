@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from datetime import datetime
 from app.schemas.pet import Pet
 from typing import List, Optional
+from app.schemas.user_consent import UserConsent
 
 class UserBase(BaseModel):
     email: EmailStr = Field(
@@ -22,6 +23,7 @@ class UserBase(BaseModel):
         description="Preferred language (en or fr)"
     )
     is_active: bool = True
+    consents: List[UserConsent] = []
     pets: List[Pet] = []
 
     @field_validator('full_name')

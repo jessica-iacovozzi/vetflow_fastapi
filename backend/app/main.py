@@ -1,10 +1,11 @@
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_babel import Babel, BabelConfigs, BabelMiddleware, _
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.api.v1.api import api_router
+from app.db.session import get_db
 
 settings = get_settings()
 logger = setup_logging()
@@ -48,7 +49,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "Accept-Language"],
 )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=settings.API_V1_STR, dependencies=[Depends(get_db)])
 
 @app.get("/")
 async def root(request: Request):

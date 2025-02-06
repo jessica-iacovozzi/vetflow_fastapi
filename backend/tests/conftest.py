@@ -1,100 +1,111 @@
+import uuid
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
-
-from app.db.session import get_db
+from alembic.command import upgrade
+from alembic.config import Config
+from app.core.config import get_settings
 from app.main import app
-from app.models.base import TimeStampedBase as Base
+from app.models.user import User
+from app.models.policy import Policy
+from fastapi.testclient import TestClient
+from app.db.session import get_db
+
+settings = get_settings()
+
+@pytest.fixture(scope="module")
+def module_monkeypatch():
+    from _pytest.monkeypatch import MonkeyPatch
+    mp = MonkeyPatch()
+    yield mp
+    mp.undo()
 
 @pytest.fixture(scope="session")
-def postgresql_url(request):
-    """
-    Create a PostgreSQL database URL for testing.
-    Uses environment variables if available, otherwise uses pytest-postgresql.
-    """
-    try:
-        import pytest_postgresql
-        from pytest_postgresql.executor import PostgresExecutor
-    except ImportError:
-        pytest.skip("pytest-postgresql is required for PostgreSQL testing")
-    
-    # Create PostgreSQL executor
-    postgresql = PostgresExecutor(
-        postgres_options='-p 5433',  # Use a non-standard port to avoid conflicts
-        host='localhost',
-    )
-    
-    # Start the PostgreSQL instance
-    postgresql.start()
-    
-    # Construct database URL
-    url = (
-        f"postgresql://{postgresql.user}:"
-        f"{postgresql.password}@{postgresql.host}:"
-        f"{postgresql.port}/{postgresql.dbname}"
-    )
-    
-    # Yield the URL and ensure cleanup
-    yield url
-    
-    # Stop the PostgreSQL instance
-    postgresql.stop()
+def test_db_name():
+    return f"test_db_{uuid.uuid4().hex[:10]}"
 
 @pytest.fixture(scope="session")
-def test_database(postgresql_url):
-    """
-    Create a SQLAlchemy engine for the test database.
-    """
-    # Create SQLAlchemy engine
-    engine = create_engine(postgresql_url)
+def alembic_config():
+    return Config("alembic.ini")
 
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
+@pytest.fixture(scope="session")
+def create_test_db(test_db_name):
+    if "test_db_" not in test_db_name:
+        pytest.fail("Safety check failed - test database name doesn't contain 'test_db_' prefix")
 
-    yield engine
+    # Extract base URL and connect to 'postgres' to create the test DB
+    base_db_url = settings.DATABASE_URL.rsplit("/", 1)[0]  # Remove DB name
+    postgres_url = f"{base_db_url}/postgres"
+
+    default_engine = create_engine(postgres_url, isolation_level="AUTOCOMMIT")
+
+    with default_engine.connect() as conn:
+        conn.execute(text(f"CREATE DATABASE {test_db_name};"))
     
-    # Cleanup
+    yield  # Run the tests 
+
+    # Drop the test database after tests complete
+    with default_engine.connect() as conn:
+        conn.execute(text(f"DROP DATABASE {test_db_name};"))
+
+@pytest.fixture(scope="session")
+def apply_migrations(alembic_config, test_db_name):
+    base_db_url = settings.DATABASE_URL.rsplit("/", 1)[0]
+    test_db_url = f"{base_db_url}/{test_db_name}"
+    alembic_config.set_main_option("sqlalchemy.url", test_db_url)
+    upgrade(alembic_config, "head")
+
+@pytest.fixture(scope="module")
+def db_session(module_monkeypatch, create_test_db, apply_migrations, test_db_name):
+    base_db_url = settings.DATABASE_URL.rsplit("/", 1)[0]
+    test_db_url = f"{base_db_url}/{test_db_name}"
+
+    # Override settings for the test database
+    module_monkeypatch.setattr(settings, "DATABASE_URL", test_db_url)
+
+    engine = create_engine(test_db_url)
+    TestingSessionLocal = sessionmaker(bind=engine)
+    session = TestingSessionLocal()
+
+    yield session  # Run tests using this session
+
+    session.close()
     engine.dispose()
 
-@pytest.fixture(scope="function")
-def db_session(test_database):
-    """
-    Create a new database session for each test function.
-    """
-    # Create a new session maker for testing
-    TestingSessionLocal = sessionmaker(
-        autocommit=False, 
-        autoflush=False, 
-        bind=test_database
-    )
+@pytest.fixture(scope="module")
+def client(db_session):
+    # Override database dependency with test session
+    app.dependency_overrides[get_db] = lambda: db_session
     
-    try:
-        # Create a new database session
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        # Close the session and clear data for next test
-        db.close()
-        Base.metadata.drop_all(bind=test_database)
-        Base.metadata.create_all(bind=test_database)
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    app.dependency_overrides.clear()
+    db_session.rollback()
 
 @pytest.fixture(scope="function")
-def client(db_session):
-    """
-    Create a test client that uses the test database session.
-    """
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-    
-    # Override the database dependency with test session
-    app.dependency_overrides[get_db] = override_get_db
-    
-    # Create and yield the test client
-    yield TestClient(app)
-    
-    # Clear the dependency overrides after the test
-    app.dependency_overrides.clear()
+def test_user(db_session, email="test@example.com", password="test_hash"):
+    user = User(email=email, hashed_password=password)
+    db_session.add(user)
+    db_session.commit()
+
+    yield user
+
+    db_session.delete(user)
+    db_session.commit()
+
+@pytest.fixture(scope="function")
+def test_policy(db_session):
+    policy = Policy(
+        version="v1.0",
+        text="Test privacy policy",
+        data_purpose="Testing purposes",
+        is_active=True
+    )
+    db_session.add(policy)
+    db_session.commit()
+
+    yield policy
+
+    db_session.delete(policy)
+    db_session.commit()
