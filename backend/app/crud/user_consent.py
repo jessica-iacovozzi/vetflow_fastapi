@@ -1,37 +1,17 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from fastapi import HTTPException
-from app.models.user_consent import UserConsent, Policy
-from app.schemas.user_consent import PolicyCreate
-
-def get_active_policy(db: Session) -> Optional[Policy]:
-    return db.query(Policy).filter(Policy.is_active == True).first()
-
-def create_policy(db: Session, policy: PolicyCreate) -> Policy:
-    # If this is a new active policy, deactivate all other policies
-    if policy.is_active:
-        db.query(Policy).filter(Policy.is_active == True).update(
-            {"is_active": False}
-        )
-    
-    db_policy = Policy(**policy.model_dump())
-    db.add(db_policy)
-    try:
-        db.commit()
-        db.refresh(db_policy)
-        return db_policy
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+from app.models.user_consent import UserConsent
+from app.schemas.user_consent import UserConsentCreate
+from app.crud.policy import get_latest_active_policy
 
 def create_user_consent(
     db: Session, 
-    user_id: int, 
-    policy_id: int
+    user_consent: UserConsentCreate
 ) -> UserConsent:
     db_consent = UserConsent(
-        user_id=user_id,
-        policy_id=policy_id
+        user_id=user_consent.user_id,
+        policy_id=user_consent.policy_id
     )
     db.add(db_consent)
     try:
@@ -66,7 +46,7 @@ def check_user_consent_status(
     Check if user has consented to the latest active policy.
     Returns a dict with consent status and details.
     """
-    active_policy = get_active_policy(db)
+    active_policy = get_latest_active_policy(db)
     if not active_policy:
         return {
             "needs_consent": False,
@@ -92,16 +72,3 @@ def check_user_consent_status(
         "needs_consent": False,
         "reason": "User has consented to current policy"
     }
-
-def get_all_policies(
-    db: Session, 
-    skip: int = 0, 
-    limit: int = 100
-) -> List[Policy]:
-    return db.query(Policy).offset(skip).limit(limit).all()
-
-def get_policy_by_version(
-    db: Session, 
-    version: str
-) -> Optional[Policy]:
-    return db.query(Policy).filter(Policy.version == version).first()

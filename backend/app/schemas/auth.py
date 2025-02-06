@@ -15,3 +15,4 @@ class UserAuth(BaseModel):
 class UserRegister(UserAuth):
     full_name: str
     preferred_language: str = "en"
+    consent_to_policy: bool = False

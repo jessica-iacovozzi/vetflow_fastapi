@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.user_consent import PolicyCreate, Policy
-from app.crud.user_consent import create_policy
+from app.schemas.policy import PolicyCreate, Policy
+from app.crud.policy import create_policy
 
 router = APIRouter()
 
