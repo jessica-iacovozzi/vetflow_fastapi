@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from app.models.pet import Pet
 from app.schemas.pet import PetCreate, PetUpdate
 
-def create_pet(db: Session, pet: PetCreate, owner_id: int) -> Pet:
-    db_pet = Pet(**pet.model_dump(), owner_id=owner_id)
+def create_pet(db: Session, pet_data: PetCreate, owner_id: int) -> Pet:
+    db_pet = Pet(**pet_data)
+    db_pet.owner_id = owner_id
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)

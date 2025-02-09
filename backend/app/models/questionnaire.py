@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, Integer, JSON, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, JSON, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
+from datetime import datetime, UTC
 from .base import TimeStampedBase
 
 class QuestionnaireType(str, enum.Enum):
@@ -16,7 +16,7 @@ class QuestionnaireResponse(TimeStampedBase):
     pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
     questionnaire_type = Column(Enum(QuestionnaireType), nullable=False)
     responses = Column(JSON, nullable=False)
-    visit_date = Column(DateTime, default=datetime.utcnow)
+    visit_date = Column(DateTime, default=datetime.now(UTC))
     
     # Relationships
     pet = relationship("Pet", back_populates="questionnaire_responses")

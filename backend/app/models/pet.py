@@ -15,6 +15,7 @@ class Sex(str, enum.Enum):
 
 class Pet(TimeStampedBase):
     __tablename__ = "pets"
+    __mapper_args__ = {"confirm_deleted_rows": False}
 
     name = Column(String, nullable=False)
     species = Column(Enum(Species), nullable=False)

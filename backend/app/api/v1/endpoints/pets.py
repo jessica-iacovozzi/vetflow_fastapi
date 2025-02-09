@@ -11,12 +11,17 @@ router = APIRouter()
 
 @router.post("/", response_model=Pet)
 def create_pet(
-    pet_in: PetCreate,
+    pet_data: PetCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Pet:
     """Create a new pet for the current user."""
-    return pet_crud.create_pet(db, pet_in, current_user.id)
+    pet = pet_crud.create_pet(
+        db=db,
+        pet_data=pet_data.model_dump(),
+        owner_id=current_user.id
+    )
+    return pet
 
 @router.get("/", response_model=List[Pet])
 def read_pets(

@@ -18,7 +18,7 @@ async def get_current_user(
 ) -> Optional[User]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=f"Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -29,7 +29,7 @@ async def get_current_user(
         if email is None:
             raise credentials_exception
         token_data = TokenData(email=email)
-    except JWTError:
+    except JWTError as e:
         raise credentials_exception
 
     user = get_user_by_email(db, email=token_data.email)

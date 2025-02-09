@@ -1,7 +1,7 @@
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from app.models.policy import Policy
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from app.schemas.policy import PolicyCreate
 from fastapi import HTTPException
 from typing import Optional, List
@@ -9,7 +9,7 @@ from typing import Optional, List
 def get_latest_active_policy(db: Session) -> Policy:
     return db.query(Policy)\
         .filter(Policy.is_active == True)\
-        .filter(Policy.effective_date <= datetime.now(timezone.utc))\
+        .filter(Policy.effective_date <= datetime.now(UTC))\
         .order_by(desc(Policy.effective_date))\
         .first()
 

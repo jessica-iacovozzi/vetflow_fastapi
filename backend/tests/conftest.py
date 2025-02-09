@@ -6,10 +6,12 @@ from alembic.command import upgrade
 from alembic.config import Config
 from app.core.config import get_settings
 from app.main import app
-from app.models.user import User
+from app.models.pet import Pet
 from app.models.policy import Policy
 from fastapi.testclient import TestClient
 from app.db.session import get_db
+from app.schemas.auth import UserRegister
+from app.crud.user import create_user
 
 settings = get_settings()
 
@@ -84,15 +86,29 @@ def client(db_session):
     db_session.rollback()
 
 @pytest.fixture(scope="function")
-def test_user(db_session, email="test@example.com", password="test_hash"):
-    user = User(email=email, hashed_password=password)
+def test_user(db_session):
+    user_register = UserRegister(
+        email="test@example.com",
+        password="test_hash",
+        full_name="Test User"
+    )
+    user = create_user(db_session, user_register)
+    
     db_session.add(user)
     db_session.commit()
-
+    
     yield user
-
+    
     db_session.delete(user)
     db_session.commit()
+
+@pytest.fixture(scope="function")
+def logged_user(client, test_user):
+    response = client.post(
+        f"{settings.API_V1_STR}/auth/login",
+        data={"username": test_user.email, "password": "test_hash"} 
+    )
+    return response.json()["access_token"], response.json()["user_id"]
 
 @pytest.fixture(scope="function")
 def test_policy(db_session):
@@ -108,4 +124,21 @@ def test_policy(db_session):
     yield policy
 
     db_session.delete(policy)
+    db_session.commit()
+
+@pytest.fixture(scope="function")
+def test_pet(db_session, logged_user):
+    _, user_id = logged_user
+    pet = Pet(
+        name="Test Pet",
+        owner_id=user_id,
+        species="dog",
+        breed="Labrador",
+    )
+    db_session.add(pet)
+    db_session.commit()
+
+    yield pet
+
+    db_session.delete(pet)
     db_session.commit()
