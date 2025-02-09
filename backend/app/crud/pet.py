@@ -3,6 +3,15 @@ from sqlalchemy.orm import Session
 from app.models.pet import Pet
 from app.schemas.pet import PetCreate, PetUpdate
 
+def get_all_pets(db: Session) -> List[Pet]:
+    return db.query(Pet).all()
+
+def get_pets_by_owner(db: Session, owner_id: int) -> List[Pet]:
+    return db.query(Pet).filter(Pet.owner_id == owner_id).all()
+
+def get_pet(db: Session, pet_id: int) -> Optional[Pet]:
+    return db.query(Pet).filter(Pet.id == pet_id).first()
+
 def create_pet(db: Session, pet_data: PetCreate, owner_id: int) -> Pet:
     db_pet = Pet(**pet_data)
     db_pet.owner_id = owner_id
@@ -10,12 +19,6 @@ def create_pet(db: Session, pet_data: PetCreate, owner_id: int) -> Pet:
     db.commit()
     db.refresh(db_pet)
     return db_pet
-
-def get_pet(db: Session, pet_id: int) -> Optional[Pet]:
-    return db.query(Pet).filter(Pet.id == pet_id).first()
-
-def get_pets_by_owner(db: Session, owner_id: int) -> List[Pet]:
-    return db.query(Pet).filter(Pet.owner_id == owner_id).all()
 
 def update_pet(db: Session, pet_id: int, pet: PetUpdate) -> Optional[Pet]:
     db_pet = get_pet(db, pet_id)

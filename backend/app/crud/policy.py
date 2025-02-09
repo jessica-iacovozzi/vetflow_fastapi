@@ -13,7 +13,6 @@ def get_latest_active_policy(db: Session) -> Policy:
         .order_by(desc(Policy.effective_date))\
         .first()
 
-
 def get_all_policies(
     db: Session, 
     skip: int = 0, 
@@ -21,11 +20,18 @@ def get_all_policies(
 ) -> List[Policy]:
     return db.query(Policy).offset(skip).limit(limit).all()
 
+
 def get_policy_by_version(
     db: Session, 
     version: str
 ) -> Optional[Policy]:
     return db.query(Policy).filter(Policy.version == version).first()
+
+def get_policy_by_id(
+    db: Session, 
+    policy_id: int
+) -> Optional[Policy]:
+    return db.query(Policy).filter(Policy.id == policy_id).first()
 
 def create_policy(db: Session, policy: PolicyCreate) -> Policy:
     if policy.is_active:

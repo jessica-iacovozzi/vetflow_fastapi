@@ -1,0 +1,42 @@
+Auth:
+    - register
+    - login
+
+User:
+    - Get all users
+    - Get current user
+    - Get user by id
+    - Update user
+    - Delete user
+
+Pets:
+    - Get all pets
+    - Get pet by id
+    - Get pets by owner id
+    - Create pet
+    - Update pet
+    - Delete pet
+
+Questionnaire Responses:
+    - Get questionnaire template by type and language
+    - Get questionnaire responses by pet id
+    - Create questionnaire response
+    - Update questionnaire response
+    - Delete questionnaire response
+
+Policies:
+    - Get all policies
+    - Get policy by id
+    - Get policy by version
+    - Create policy
+
+User Consent:
+    - Check user consent status
+
+Admin:
+    - Get all users
+    - Get user by id
+    - Create user
+    - Update user
+    - Delete user
+

@@ -71,6 +71,14 @@ class UserUpdate(UserBase):
         default=None, 
         pattern="^(en|fr)$"
     )
+    email: Optional[EmailStr] = Field(
+        default=None, 
+        description="User's email address"
+    )
+    password: Optional[str] = Field(
+        default=None, 
+        description="User password"
+    )
 
 class User(UserBase):
     id: int

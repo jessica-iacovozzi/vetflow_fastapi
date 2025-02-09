@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
 
@@ -53,6 +53,17 @@ class QuestionnaireCreate(QuestionnaireBase):
         ..., 
         gt=0, 
         description="ID of the pet associated with this questionnaire"
+    )
+
+class QuestionnaireUpdate(QuestionnaireBase):
+    pet_id: Optional[int] = Field(
+        None, 
+        gt=0, 
+        description="ID of the pet associated with this questionnaire"
+    )
+    visit_date: Optional[datetime] = Field(
+        None, 
+        description="Date of the visit"
     )
 
 class Questionnaire(QuestionnaireBase):
