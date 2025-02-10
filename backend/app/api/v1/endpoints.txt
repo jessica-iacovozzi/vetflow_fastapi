@@ -32,11 +32,3 @@ Policies:
 
 User Consent:
     - Check user consent status
-
-Admin:
-    - Get all users
-    - Get user by id
-    - Create user
-    - Update user
-    - Delete user
-
